@@ -1,4 +1,4 @@
-bootstrapperver = 1.1
+bootstrapperver = 1
 import subprocess
 
 def compatibilitycheck():
