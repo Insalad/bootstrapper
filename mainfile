@@ -1,5 +1,6 @@
-bootstrapperver = 1
+bootstrapperver = 1.1
 import subprocess
+import tempfile
 
 def compatibilitycheck():
     requiredlibs = ["requests", "tqdm"]
@@ -32,56 +33,14 @@ import zipfile
 import shutil
 import sys
 import tqdm  
-
-def updatecheck():
-    startcolor = (50, 205, 50)
-    endcolor = (34, 139, 34)
-    try:
-        response = requests.get("https://raw.githubusercontent.com/Insalad/bootstrapper/main/mainfile")
-        if response.status_code == 200:
-            latestversionline = response.text.strip().split("\n")[0]
-            latestversion = latestversionline.split("=")[1].strip()
-            if str(bootstrapperver) < latestversion:
-                return latestversion
-    except Exception as e:
-        print(gradient(f"Error checking for update: {e}", (255, 0, 0), (255, 0, 0)))
-    return None
-
-def updatescript():
-    try:
-        response = requests.get("https://raw.githubusercontent.com/Insalad/bootstrapper/main/mainfile")
-        if response.status_code == 200:
-            with open(__file__, "w") as file:
-                file.write(response.text)
-            return True
-    except Exception as e:
-        print(gradient(f"Error updating: {e}", (255, 0, 0), (255, 0, 0)))
-    return False
-
-def runupdatechecker():
-    latestversion = updatecheck()
-    if latestversion:
-        startcolor = (0, 255, 0)
-        endcolor = (0, 150, 0)
-        updatemessage = gradient(f"A new version of the bootstrapper was found, current version: {bootstrapperver} latest version {latestversion}, updating..",startcolor, endcolor)
-        print(updatemessage)
-        if updatescript():
-            print(gradient("Updated successfully. Please restart the bootstrapper", startcolor, endcolor))
-            exit()
-        else:
-            print(gradient("Failed to update.", (255, 0, 0), (255, 0, 0)))
-            exit()
-    else:
-        print("okokokokokokokokokokokokokokokokokokokokokokok")
-
-runupdatechecker()
+import time 
 
 def downloadfunc(url, dest):
     response = requests.get(url, stream=True)
-    total_size = int(response.headers.get('content-length', 0))
+    tot = int(response.headers.get('content-length', 0))
     with open(dest, 'wb') as file, tqdm.tqdm(
         desc=dest,
-        total=total_size,
+        total=tot,
         unit='B',
         unit_scale=True,
         unit_divisor=1024,
@@ -89,14 +48,6 @@ def downloadfunc(url, dest):
         for chunk in response.iter_content(chunk_size=8192):
             file.write(chunk)
             bar.update(len(chunk))
-
-def extractfunc(filepath, extract):
-    with zipfile.ZipFile(filepath, 'r') as zip_ref:
-        total_files = len(zip_ref.namelist())
-        with tqdm.tqdm(total=total_files, desc="Extracting files", unit="file") as bar:
-            for member in zip_ref.namelist():
-                zip_ref.extract(member, extract)
-                bar.update(1)
 
 def deletefunc(path):
     if os.path.isfile(path):
@@ -106,6 +57,67 @@ def deletefunc(path):
 
 def runfunc(filepath, dir):
     process = subprocess.Popen(filepath, cwd=dir, shell=True)
+    
+def extractfunc(filepath, extract):
+    with zipfile.ZipFile(filepath, 'r') as zip_ref:
+        totfiles = len(zip_ref.namelist())
+        with tqdm.tqdm(total=totfiles, desc="Extracting files", unit="file") as bar:
+            for member in zip_ref.namelist():
+                zip_ref.extract(member, extract)
+                bar.update(1)
+
+def srcexecheck():
+    return getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+
+def updatecheck():
+    try:
+        response = requests.get("https://raw.githubusercontent.com/Insalad/bootstrapper/main/mainfile")
+        if response.status_code == 200:
+            latestversionline = response.text.strip().split("\n")[0]
+            latestversion = latestversionline.split("=")[1].strip()
+            if str(bootstrapperver) < latestversion:
+                return latestversion
+    except Exception as e:
+        print(f"Error checking for update: {e}")
+    return None
+
+def updatescript():
+    try:
+        response = requests.get("https://raw.githubusercontent.com/Insalad/bootstrapper/main/mainfile")
+        if response.status_code == 200:
+            with open(__file__, "w", encoding="utf-8") as file:
+                file.write(response.text)
+            return True
+    except Exception as e:
+        print(f"Error updating: {e}")
+    return False
+
+def runupdatechecker():
+    latestversion = updatecheck()
+    if latestversion:
+        print(f"A new version of the bootstrapper was found, current version: {bootstrapperver}, latest version: {latestversion}, updating...")
+        if srcexecheck():
+            newbootstrapper = os.path.join(os.path.dirname(sys.executable), "SaladBootstrapper_v1.1.exe")
+            downloadfunc("https://github.com/Insalad/bootstrapper/raw/main/saladbootstrapper.exe", newbootstrapper)
+            subprocess.Popen(newbootstrapper, shell=True)
+            deletion = tempfile.NamedTemporaryFile(delete=False, suffix=".bat")
+            deletion.write(f"""
+            @echo off
+            timeout /t 2 >nul
+            del "{sys.executable}" >nul 2>&1
+            del "%~f0" >nul 2>&1
+            """.encode())
+            deletion.close()
+            subprocess.Popen(['cmd', '/c', deletion.name], shell=True)
+            sys.exit()
+        else:
+            if updatescript():
+                print("Updated successfully. Please restart the bootstrapper")
+            else:
+                print("Failed to update.")
+        sys.exit()
+
+runupdatechecker()
 
 os.system('cls' if os.name == 'nt' else 'clear')
 print(gradient(
@@ -119,7 +131,7 @@ print(gradient(
 ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░                                                                                                                                                                                                                   
 """, 
 (0, 102, 255), (102, 0, 204)))
-saladurl = "https://cdn.discordapp.com/attachments/1247578618389860463/1272601741300338809/Salad.zip?ex=66bd8c7a&is=66bc3afa&hm=8ada363b06f741c88574dc09b7e4b0476368f765e878e932b416f5bf038318d5"
+saladurl = "https://cdn.discordapp.com/attachments/1247578618389860463/1272601741300338809/Salad.zip?ex=66c02f7a&is=66beddfa&hm=4e6f334700a6e87fa7da42fa2043b1c2f60f52c94e91869627f8ee582f3ef13c&"
 downloaddir = os.path.expanduser("~/Downloads")
 saladzip = os.path.join(downloaddir, "Salad.zip")
 saladfolder = os.path.join(downloaddir, "Salad")
