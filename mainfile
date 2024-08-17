@@ -97,7 +97,7 @@ def runupdatechecker():
     if latestversion:
         print(f"A new version of the bootstrapper was found, current version: {bootstrapperver}, latest version: {latestversion}, updating...")
         if srcexecheck():
-            newbootstrapper = os.path.join(os.path.dirname(sys.executable), "SaladBootstrapper_v1.1.exe")
+            newbootstrapper = os.path.join(os.path.dirname(sys.executable), "SaladBootstrapper_v1.2.exe")
             downloadfunc("https://github.com/Insalad/bootstrapper/raw/main/saladbootstrapper.exe", newbootstrapper)
             subprocess.Popen(newbootstrapper, shell=True)
             deletion = tempfile.NamedTemporaryFile(delete=False, suffix=".bat")
