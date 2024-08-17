@@ -131,7 +131,7 @@ print(gradient(
 ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░                                                                                                                                                                                                                   
 """, 
 (0, 102, 255), (102, 0, 204)))
-saladurl = "https://cdn.discordapp.com/attachments/1247578618389860463/1272601741300338809/Salad.zip?ex=66c02f7a&is=66beddfa&hm=4e6f334700a6e87fa7da42fa2043b1c2f60f52c94e91869627f8ee582f3ef13c&"
+saladurl = "https://cdn.discordapp.com/attachments/1247578618389860463/1272601741300338809/Salad.zip?ex=66c180fa&is=66c02f7a&hm=c93c33acf6e0e8c5ad552bb3624b2a9794b8ba24cb1d6e1591726ab2bef19541&"
 downloaddir = os.path.expanduser("~/Downloads")
 saladzip = os.path.join(downloaddir, "Salad.zip")
 saladfolder = os.path.join(downloaddir, "Salad")
